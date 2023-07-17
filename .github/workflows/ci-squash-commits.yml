@@ -23,6 +23,7 @@ jobs:
         git config user.email github-actions[bot]@users.noreply.github.com
         git remote add gh-token "https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.event.repository.name }}.git"
     - run: |
+        git fetch -p
         git reset --soft $(git merge-base main HEAD)
         git commit -m "${{ steps.determine-commit-message.outputs.commit-message }}"
         git push origin $(git branch --show-current) --force-with-lease
