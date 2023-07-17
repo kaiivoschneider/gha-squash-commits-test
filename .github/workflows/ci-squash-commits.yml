@@ -6,10 +6,9 @@ jobs:
   squash-commits:
     runs-on: ubuntu-latest
     steps:
-    - id: determine-metadata
+    - id: determine-commit-message
       run: |
         echo "commit-message=${{ github.event.client_payload.slash_command.args.unnamed.arg1 }}" >> "$GITHUB_OUTPUT"
-        echo "branch-name=${GITHUB_REF##*/}" >> "$GITHUB_OUTPUT"
     - uses: actions/checkout@v3
       with:
         ref: ${{ github.event.client_payload.pull_request.head.ref }}
@@ -17,7 +16,7 @@ jobs:
         npm i
         npm run lint:commit-message
       env:
-        COMMIT_MESSAGE: ${{ steps.determine-metadata.outputs.commit-message }}
+        COMMIT_MESSAGE: ${{ steps.determine-commit-message.outputs.commit-message }}
 
     - run: |
         git config user.name github-actions[bot]
@@ -25,8 +24,8 @@ jobs:
         git remote add gh-token "https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.event.repository.name }}.git"
     - run: |
         git reset --soft $(git merge-base main HEAD)
-        git commit -m "${{ steps.determine-metadata.outputs.commit-message }}"
-        git push origin ${{ steps.determine-metadata.outputs.branch-name }} --force-with-lease
+        git commit -m "${{ steps.determine-commit-message.outputs.commit-message }}"
+        git push origin $(git branch --show-current) --force-with-lease
 
     - if: always()
       uses: actions/checkout@v3
