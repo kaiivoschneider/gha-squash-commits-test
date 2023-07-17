@@ -18,6 +18,10 @@ jobs:
         COMMIT_MESSAGE: ${{ steps.determine-metadata.outputs.commit-message }}
 
     - run: |
+        git config user.name github-actions[bot]
+        git config user.email github-actions[bot]@users.noreply.github.com
+        git remote add gh-token "https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.event.repository.name }}.git"
+    - run: |
         git reset --soft $(git merge-base main HEAD)
         git commit -m "${{ steps.determine-metadata.outputs.commit-message }}"
         git push origin ${{ steps.determine-metadata.outputs.branch-name }} --force-with-lease
