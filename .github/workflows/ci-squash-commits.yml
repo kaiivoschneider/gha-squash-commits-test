@@ -11,10 +11,8 @@ jobs:
         echo "commit-message=${{ github.event.client_payload.slash_command.args.unnamed.arg1 }}" >> "$GITHUB_OUTPUT"
         echo "branch-name=${GITHUB_REF##*/}" >> "$GITHUB_OUTPUT"
     - uses: actions/checkout@v3
-    - uses: ./.github/actions/setup-repo
-      with:
-        node-auth-token: ${{ secrets.GITHUB_TOKEN }}
     - run: |
+        npm i
         npm run lint:commit-message
       env:
         COMMIT_MESSAGE: ${{ steps.determine-metadata.outputs.commit-message }}
