@@ -11,6 +11,8 @@ jobs:
         echo "commit-message=${{ github.event.client_payload.slash_command.args.unnamed.arg1 }}" >> "$GITHUB_OUTPUT"
         echo "branch-name=${GITHUB_REF##*/}" >> "$GITHUB_OUTPUT"
     - uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.client_payload.pull_request.head.ref }}
     - run: |
         npm i
         npm run lint:commit-message
@@ -35,6 +37,7 @@ jobs:
     - if: success()
       uses: ./create-or-update-comment
       with:
+        repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
         issue-number: ${{ github.event.client_payload.github.payload.issue.number }}
         body: |
           Commits successfully squashed
@@ -42,6 +45,7 @@ jobs:
     - if: failure()
       uses: ./create-or-update-comment
       with:
+        repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
         issue-number: ${{ github.event.client_payload.github.payload.issue.number }}
         body: |
           Something went wrong during squash
