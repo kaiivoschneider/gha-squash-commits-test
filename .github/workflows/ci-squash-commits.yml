@@ -1,0 +1,47 @@
+name: Squash commits
+on:
+  repository_dispatch:
+      types: [squash-commits-with-message-command]
+jobs:
+  squash-commits:
+    runs-on: ubuntu-latest
+    steps:
+    - id: determine-metadata
+      run: |
+        echo "commit-message=${{ github.event.client_payload.slash_command.args.unnamed.arg1 }}" >> "$GITHUB_OUTPUT"
+        echo "branch-name=${GITHUB_REF##*/}" >> "$GITHUB_OUTPUT"
+    - uses: actions/checkout@v3
+    - uses: ./.github/actions/setup-repo
+      with:
+        node-auth-token: ${{ secrets.GITHUB_TOKEN }}
+    - run: |
+        npm run lint:commit-message
+      env:
+        COMMIT_MESSAGE: ${{ steps.determine-metadata.outputs.commit-message }}
+
+    - run: |
+        git switch yourBranch
+        git reset --soft $(git merge-base main HEAD)
+        git commit -m "${{ steps.determine-metadata.outputs.commit-message }}"
+        git push origin ${{ steps.determine-metadata.outputs.branch-name }} --force-with-lease
+
+    - if: always()
+      uses: actions/checkout@v3
+      with:
+        repository: peter-evans/create-or-update-comment
+        path: ./create-or-update-comment
+        ref: v2
+    - if: success()
+      uses: ./create-or-update-comment
+      with:
+        issue-number: ${{ github.event.client_payload.github.payload.issue.number }}
+        body: |
+          Commits successfully squashed
+        reaction-type: hooray
+    - if: failure()
+      uses: ./create-or-update-comment
+      with:
+        issue-number: ${{ github.event.client_payload.github.payload.issue.number }}
+        body: |
+          Something went wrong during squash
+        reaction-type: hooray
