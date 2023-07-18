@@ -9,9 +9,11 @@ jobs:
     - id: determine-commit-message
       run: |
         echo "commit-message=${{ github.event.client_payload.slash_command.args.unnamed.arg1 }}" >> "$GITHUB_OUTPUT"
+
     - uses: actions/checkout@v3
       with:
         ref: ${{ github.event.client_payload.pull_request.head.ref }}
+
     - run: |
         npm i
         npm run lint:commit-message
@@ -25,6 +27,7 @@ jobs:
     - run: |
         git fetch -p
         git branch --track main origin/main
+        git pull
         git reset --soft $(git merge-base main HEAD)
         git commit -m "${{ steps.determine-commit-message.outputs.commit-message }}"
         git push origin $(git branch --show-current) --force-with-lease
